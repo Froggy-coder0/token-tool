@@ -85,8 +85,15 @@
   </div>
 
   <script>
+    // Paste your free Helius API key between the quotes below.
+    const HELIUS_KEY = "3e5ce826-0517-4ba1-8645-aff7681bad80";
+
     // Tried in order. If one fails (blocked or rate limited), the next one is used.
-    const RPC_URLS = ["https://solana-rpc.publicnode.com", "https://api.mainnet-beta.solana.com"];
+    const RPC_URLS = [
+      ...(HELIUS_KEY ? ["https://mainnet.helius-rpc.com/?api-key=" + HELIUS_KEY] : []),
+      "https://solana-rpc.publicnode.com",
+      "https://api.mainnet-beta.solana.com"
+    ];
     let pairs = [], sortKey = "volume", sortDir = -1;
 
     // ---------- small helpers ----------
@@ -234,7 +241,7 @@
         body.appendChild(links);
       } catch (err) {
         body.innerHTML = "";
-        body.appendChild(el("span", "error", "Error: " + err.message + " (the free RPC can be rate limited, try again in a minute)"));
+        body.appendChild(el("span", "error", "Error: " + err.message + " (the Solana RPC refused the request. If this keeps happening, the site needs an RPC key.)"));
       }
     }
 

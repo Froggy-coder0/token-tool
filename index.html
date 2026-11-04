@@ -85,7 +85,8 @@
   </div>
 
   <script>
-    const RPC_URL = "https://api.mainnet-beta.solana.com";
+    // Tried in order. If one fails (blocked or rate limited), the next one is used.
+    const RPC_URLS = ["https://solana-rpc.publicnode.com", "https://api.mainnet-beta.solana.com"];
     let pairs = [], sortKey = "volume", sortDir = -1;
 
     // ---------- small helpers ----------
@@ -152,12 +153,18 @@
 
     // ---------- safety checker ----------
     async function rpc(method, params) {
-      const res = await fetch(RPC_URL, { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
-      if (!res.ok) throw new Error("RPC error: " + res.status);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      return data.result;
+      let lastError;
+      for (const url of RPC_URLS) {
+        try {
+          const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+          if (!res.ok) throw new Error("RPC error: " + res.status);
+          const data = await res.json();
+          if (data.error) throw new Error(data.error.message);
+          return data.result;
+        } catch (err) { lastError = err; }
+      }
+      throw lastError;
     }
 
     function buildReport(info, top10, p) {
